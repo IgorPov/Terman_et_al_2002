@@ -1,19 +1,20 @@
 COMMENT
 
-add CA dependence?
+I_syn.mod as syn
 
-I_K.mod as K
-
-Hodgkin-Huxley like potassium current as decribed in:
+Point process to create synapse between GPe cells and/or STN cells using Hodgkin-Huxley like currents as decribed in:
 Terman D, Rubin JE, Yew AC, Wilson CJ (2002) Activity patterns in a model
 for the subthalamopallidal network of the basal ganglia. J Neurosci 22:2963-76
+
+To differentiate between GPe to STN, GPe to GPe, or STN to GPe range parameters are set accordingly.
 
 ENDCOMMENT
 
 NEURON {
-	SUFFIX K
+	POINT_PROCESS syn
+	POINTER vg
 	NONSPECIFIC_CURRENT I
-	RANGE g0, v0, tau_0n, tau_1n, phi_n, theta_tn, theta_n, sigma_tn, sigma_n
+	RANGE g0, v0, theta_g, theta_Hg, sigma_Hg, alpha, beta, s, H_inf,vh
 }
 
 UNITS {
@@ -26,48 +27,47 @@ PARAMETER {
 	v 		(mV)
 	g0 		(S/cm2)
 	v0 		(mV)
+	vg		(mV)
 
-	phi_n
-	theta_tn
-	theta_n
-	sigma_tn
-	sigma_n
-	tau_0n	(ms)
-	tau_1n 	(ms)
+	theta_g
+	theta_Hg
+	sigma_Hg
+	alpha 	(ms-1)
+	beta 	(ms-1)
 }
 
-ASSIGNED {	
+ASSIGNED {
 	I 		(mA/cm2)
-	n_inf
-	tau_n	(ms)
+	vh 		(mV)
+	H_inf
 }
 
 STATE {
-	n
+	s
 }
 
 INITIAL {
 	rates(v)
-	n = n_inf
+	s = 0
 }
 
 BREAKPOINT {
  	SOLVE states METHOD cnexp
 
- 	I=g0*(n*n*n*n)*(v-v0)
+ 	I=g0*(v-v0)*s
 }
 
 DERIVATIVE states {
 	rates(v)
-	n' = phi_n*((n_inf-n)/tau_n)
+	s' = alpha*H_inf*(1-s)-beta*s
 }
 
 PROCEDURE rates(v(mV)) {  :Computes rate and other constants at current v.
 	:Call once from HOC to initialize inf at resting v.
 
 UNITSOFF
-	tau_n = tau_0n + tau_1n/(1+exp(-(v-theta_tn)/sigma_tn))
-	n_inf = 1/(1+exp(-(v-theta_n)/sigma_n))
+	vh = vg-theta_g
+	H_inf = 1/(1+exp(-(vh-theta_Hg)/sigma_Hg))
 }
 
 UNITSON

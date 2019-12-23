@@ -1,19 +1,17 @@
 COMMENT
 
-add CA dependence?
+I_Ca.mod as Ca
 
-I_K.mod as K
-
-Hodgkin-Huxley like potassium current as decribed in:
+Hodgkin-Huxley like calcium current as decribed in:
 Terman D, Rubin JE, Yew AC, Wilson CJ (2002) Activity patterns in a model
 for the subthalamopallidal network of the basal ganglia. J Neurosci 22:2963-76
 
 ENDCOMMENT
 
 NEURON {
-	SUFFIX K
+	SUFFIX Ca
 	NONSPECIFIC_CURRENT I
-	RANGE g0, v0, tau_0n, tau_1n, phi_n, theta_tn, theta_n, sigma_tn, sigma_n
+	RANGE g0, v0, theta_s, sigma_s
 }
 
 UNITS {
@@ -27,47 +25,30 @@ PARAMETER {
 	g0 		(S/cm2)
 	v0 		(mV)
 
-	phi_n
-	theta_tn
-	theta_n
-	sigma_tn
-	sigma_n
-	tau_0n	(ms)
-	tau_1n 	(ms)
+	theta_s
+	sigma_s
 }
 
-ASSIGNED {	
+ASSIGNED {
 	I 		(mA/cm2)
-	n_inf
-	tau_n	(ms)
-}
-
-STATE {
-	n
+	s_inf
 }
 
 INITIAL {
 	rates(v)
-	n = n_inf
 }
 
 BREAKPOINT {
- 	SOLVE states METHOD cnexp
-
- 	I=g0*(n*n*n*n)*(v-v0)
-}
-
-DERIVATIVE states {
 	rates(v)
-	n' = phi_n*((n_inf-n)/tau_n)
+
+ 	I=g0*s_inf*s_inf*(v-v0)
 }
 
 PROCEDURE rates(v(mV)) {  :Computes rate and other constants at current v.
 	:Call once from HOC to initialize inf at resting v.
 
 UNITSOFF
-	tau_n = tau_0n + tau_1n/(1+exp(-(v-theta_tn)/sigma_tn))
-	n_inf = 1/(1+exp(-(v-theta_n)/sigma_n))
+	s_inf = 1/(1+exp(-(v-theta_s)/sigma_s))
 }
 
 UNITSON
